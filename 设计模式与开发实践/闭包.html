@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<script>
+   // 封装变量
+   var mult=(function(){
+       // 局部变量能被外界访问，不会被销毁
+       var catche={}
+       return function () {
+           var args=Array.prototype.join.call(arguments,",");
+           if(args in catche){
+               return catche[args];
+           }
+           var a=1;
+           for(var i=0,l=arguments.length;i<l;i++){
+               a=a*arguments[i];
+           }
+           catche[args]=a;
+           return a;
+       }
+   })()
+
+   console.log(mult(1,2,3))
+   console.log(mult(5,3))
+
+   /*
+   提炼函数是代码重构中的一种常见技巧。如果在一个大函数中有一些代码块能够独立出来，
+   我们常常把这些代码块封装在独立的小函数里面。独立出来的小函数有助于代码复用，如果这些
+   小函数有一个良好的命名，它们本身也起到了注释的作用。如果这些小函数不需要在程序的其他
+   地方使用，最好是把它们用闭包封闭起来
+   */
+   var mult=(function(){
+       // 局部变量能被外界访问，不会被销毁
+       var catche={}
+       var calculate=function(){ // 封闭 calculate 函数
+           var a=1;
+           for(var i=0,l=arguments.length;i<l;i++){
+               a=a*arguments[i];
+           }
+           return a;
+       }
+       return function () {
+           var args=Array.prototype.join.call(arguments,",");
+           if(args in catche){
+               return catche[args];
+           }
+           return catche[args]=calculate.apply(null,arguments);
+       }
+   })()
+
+
+    // 延续局部变量寿命
+
+    // img 对象经常用于进行数据上报，如下所示：
+    var report = function( src ){
+        var img = new Image();
+        img.src = src;
+    };
+    // report( 'http://xxx.com/getUserInfo' );
+
+    /*
+    但是通过查询后台的记录我们得知，因为一些低版本浏览器的实现存在 bug，在这些浏览器
+    下使用 report 函数进行数据上报会丢失 30%左右的数据，也就是说， report 函数并不是每一次
+    都成功发起了 HTTP请求。丢失数据的原因是 img 是 report 函数中的局部变量，当 report 函数的
+    调用结束后， img 局部变量随即被销毁，而此时或许还没来得及发出 HTTP 请求，所以此次请求
+    就会丢失掉。
+    现在我们把 img 变量用闭包封闭起来，便能解决请求丢失的问题：
+     */
+
+   var report1 = (function(){
+       var imgs = [];
+       return function( src ){
+           var img = new Image();
+           imgs.push( img );
+           img.src = src;
+       }
+   })();
+
+   /*
+    如果在每个月的前 29天，我们都只是保存好当天的开销，直到第 30天才进行求值计算，这
+    样就达到了我们的要求。虽然下面的 cost 函数还不是一个 currying 函数的完整实现，但有助于
+    我们了解其思想：
+    */
+
+    var cost=(function(){
+          var agrs=[];
+          return function(){
+              if(arguments.length===0){
+                  var money=0;
+                  for(var i=0;i<agrs.length;i++){
+                      money+=agrs[i];
+                  }
+                  return money;
+              }else{
+                  [].push.apply(agrs,arguments);
+              }
+          }
+    })()
+
+    cost(100)
+    cost(200)
+    cost(300)
+
+    console.log(cost(0));
+
+
+    /*
+    编写一个通用的 function currying(){} ， function currying(){} 接受一个参数，即
+    将要被 currying 的函数。在这个例子里，这个函数的作用遍历本月每天的开销并求出它们的总和。
+    代码如下：
+     */
+
+   var currying = function( fn ){
+       var args = [];
+       return function(){
+           if ( arguments.length === 0 ){
+               return fn.apply( this, args );
+           }else{
+               [].push.apply( args, arguments );
+               return arguments.callee;
+           }
+       }
+   };
+   var cost1 = (function(){
+       var money = 0;
+       return function(){
+           for ( var i = 0, l = arguments.length; i < l; i++ ){
+               money += arguments[ i ];
+           }
+           return money;
+       }
+   })();
+
+   var cost2 = currying( cost1 ); // 转化成 currying 函数
+
+   cost2( 100 ); // 未真正求值
+   cost2( 200 ); // 未真正求值
+   cost2( 300 ); // 未真正求值
+   console.log ( cost2() ); // 求值并输出：600
+</script>
+</body>
+</html>

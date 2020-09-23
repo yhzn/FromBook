@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<div>1</div>
+<div>2</div>
+<div>3</div>
+<div>4</div>
+<div>5</div>
+<script>
+    // 变量的生存周期
+
+    /*
+    对于全局变量来说，全局变量的生存周期当然是永久的，除非我们主动销毁这个全局变量。
+    而对于在函数内用 var 关键字声明的局部变量来说，当退出函数时，这些局部变量即失去了
+    它们的价值，它们都会随着函数调用的结束而被销毁：
+     */
+
+    let func1 = function(){
+        let a = 1; // 退出函数后局部变量 a 将被销毁
+        console.log ( a );
+    };
+    func1();
+
+    let func2 = function(){
+        var a = 1;
+        return function(){
+            a++;
+            console.log ( a );
+        }
+    };
+    console.log(func2()())  // 2
+    console.log(func2()())  // 2
+    console.log(func2()())  // 2
+
+    let f2=func2()
+    console.log(f2())  // 2
+    console.log(f2())  // 3
+    console.log(f2())  // 4
+
+    /*
+    当退出函数后，局部变量 a 并没有消失，而是似乎一直在某个地方
+    存活着。这是因为当执行 var f = func(); 时， f 返回了一个匿名函数的引用，它可以访问到 func()
+    被调用时产生的环境，而局部变量 a 一直处在这个环境里。既然局部变量所在的环境还能被外界
+    访问，这个局部变量就有了不被销毁的理由。在这里产生了一个闭包结构，局部变量的生命看起
+    来被延续了。
+     */
+
+    var nodes=document.getElementsByTagName("div");
+    // for(var i=0,len=nodes.length;i<len;i++){
+    //     nodes[i].onclick=function(){
+    //         console.log(i);
+    //     }
+    // }
+    // console.log("node",i)
+    /*
+    测试这段代码就会发现，无论点击哪个 div ，最后弹出的结果都是 5。这是因为 div 节点的
+    onclick 事件是被异步触发的，当事件被触发的时候， for 循环早已结束，此时变量 i 的值已经是
+    5，所以在 div 的 onclick 事件函数中顺着作用域链从内到外查找变量 i 时，查找到的值总是 5。
+
+    解决方法是在闭包的帮助下，把每次循环的 i 值都封闭起来。当在事件函数中顺着作用域链
+    中从内到外查找变量 i 时，会先找到被封闭在闭包环境中的 i
+     */
+
+    for(var i=0,len=nodes.length;i<len;i++){
+        // 每次循环创建新的作用域，且局部变量能被外界访问，不会被销毁
+        (function(i){
+            nodes[i].onclick=function(){
+                console.log(i)
+            }
+        })(i)
+    }
+
+    var Type = {};
+    for ( var i = 0, type; type = [ 'String', 'Array', 'Number' ][ i++ ]; ){
+        (function( type ){
+            Type[ 'is' + type ] = function( obj ){
+                return Object.prototype.toString.call( obj ) === '[object '+ type +']';
+            }
+        })( type )
+    };
+    console.log(Type.isArray( [] )); // 输出：true
+    console.log(Type.isString( "str" )); // 输出：true
+
+</script>
+</body>
+</html>

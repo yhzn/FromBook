@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<script>
+    // Array(..) 构造器有一个众所周知的陷阱，就是如果只传入一个参数，并且这个参数是数字的话，那么不会构造一个值为这个数字的单个元素的数组，而是构造一个空数组，其length 属性为这个数字。
+    // 这个动作会产生不幸又诡异的“空槽”行为，这是 JavaScript 数组广为人所诟病的一点。
+    // Array.of(..) 取代了 Array(..) 成为数组的推荐函数形式构造器，因为 Array.of(..) 并没有这个特殊的单个数字参数的问题
+
+    let a = Array( 3 );
+    a.length; // 3
+    a[0]; // undefined
+    let b = Array.of( 3 );
+    b.length; // 1
+    b[0]; // 3
+    // 什么情况下你会需要使用 Array.of(..) 而不是只用 c = [1,2,3] 这样的字面值语法创建一个数组呢
+    // 1.如果你有一个回调函数需要传入的参数封装为数组， Array.of(..) 可以完美解决这个需求。
+    // 2.如果你构建 Array 的子类（参见 3.4 节），并且想要在你的子类实例中创建和初始化元素
+
+    class MyCoolArray extends Array{
+        sum () {
+            return this.reduce(function reducer(acc,curr){
+                return acc+curr;
+            },0)
+        }
+    }
+    let Ar=new MyCoolArray(3);
+    console.log(Ar.length);
+    console.log(Ar.sum());
+
+    let Ar1=MyCoolArray.of(3)
+    console.log(Ar1.length);
+    console.log(Ar1.sum());
+
+
+    // JavaScript 中的 "类（似）数组对象" 是指一个有 length 属性，具体说是大于等于 0 的整数值的对象。
+    let likeArr={
+        length:5,
+        "1":"foo",
+        "2":"bar"
+    }
+    let arr=Array.prototype.slice.call(likeArr);
+    console.log("likeArr",arr);
+
+    // 复制产生一个真正的数组
+    let arr1=arr.slice();
+    arr[0]="test";
+    console.log(arr)
+    console.log(arr1)
+
+    // 代替方案
+    let array=Array.from(likeArr);
+    console.log(array);
+    let arrCopy=Array.from(array);
+    console.log(arrCopy);
+
+    // Array.from(..) 永远不会产生空槽位
+    // var a = Array( 4 );
+    // 4个空槽位！
+    // var b = Array.apply( null, { length: 4 } );
+    // 4个undefined值
+    // 而现在 Array.from(..) 使其简单了很多：
+    // var c = Array.from( { length: 4 } );
+    // 4个undefined值
+    let obj={
+        key:"test"
+    }
+    let mapArray=Array.from(likeArr,function mapper(val,idx){
+        if (typeof val == "string") {
+            console.log(this);
+            return val.toUpperCase();
+        }
+        else {
+            return idx;
+        }
+    },obj)
+    console.log(mapArray)
+
+    let findArr=[
+        {int:1,val:"a"},
+        {int:2,val:"b"},
+        {int:2,val:"b"},
+        {int:3,val:"c"},
+        {int:3,val:"d"},
+        {int:2,val:"e"}
+    ]
+    let find=findArr.find((item)=>item.int===2);
+    console.log(find);
+
+</script>
+</body>
+</html>

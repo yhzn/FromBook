@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<script>
+    // 代理
+    let obj={a:1},
+        handlers={
+            get(target,key,context){
+                // target === obj
+                // context === pobj
+                console.log( "accessing: ", key);
+                return Reflect.get(target,key,context);
+            },
+            // 某些 trap 是由其他 trap 的默认动作间接触发的 如：
+            getOwnPropertyDescriptor(target,prop){
+                console.log("getOwnPropertyDescriptor");
+                return Object.getOwnPropertyDescriptor(target,prop);
+            },
+            defineProperty(target,prop,desc){
+                console.log("defineProperty");
+                return Object.defineProperty(target,prop,desc)
+            }
+        },
+        pobj=new Proxy(obj,handlers);
+        console.log(pobj);
+        console.log("--------------")
+        pobj.b=5
+        pobj.b;
+
+        // 可取消代理
+
+        let CObj={a:1},
+            CHandlers={
+                get(target,key,context){
+                    // target === obj
+                    // context === pobj
+                    console.log("accessing: ", key);
+                    return target[key];
+                }
+
+            },
+            {proxy:CPobj,revoke:CPrevoke}=Proxy.revocable(CObj,CHandlers);
+
+            console.log("---------------")
+            CPobj.a;
+
+            CPrevoke();
+
+            try{
+            // CPobj.a;  // Proxy_1.html?_ijt=hlqrenk1j8cme8udd5tsgig7nb:56 Uncaught TypeError: Cannot perform 'get' on a proxy that has been revoked
+            }catch(err){
+                throw new Error(err);
+            }
+
+
+            /*
+            * 可取消代理用 Proxy.revocable(..) 创建，这是一个普通函数，而不像 Proxy(..) 一样是构
+            * 造器。除此之外，它接收同样的两个参数：target 和 handlers。
+            * 和 new Proxy(..) 不一样， Proxy.revocable(..) 的返回值不是代理本身。而是一个有两个
+            * 属性——proxy 和 revode 的对象，我们使用对象解构（参见 2.4 节）把这两个属性分别赋
+            * 给变量 pobj 和 prevoke() 。
+            * 一旦可取消代理被取消，任何对它的访问（触发它的任意 trap）都会抛出 TypeError
+            *
+            *
+            *
+            * 可取消代理的一个可能应用场景是，在你的应用中把代理分发到第三方，其中管理你的
+            * 模型数据，而不是给出真实模型本身的引用。如果你的模型对象改变或者被替换，就可
+            * 以使分发出去的代理失效，这样第三方能够（通过错误！）知晓变化并请求更新到这个
+            * 模型的引用。
+            */
+
+            let messages=[],
+                AHandlers={
+                   get(target,key){
+                       if(typeof target[key] === "string"){
+                           // 过滤掉标点符号
+                           return target[key].replace(/[^\w]/g,"");
+                       }
+                       return target[key];
+                   },
+                   set(target,key,val){
+                       console.log(target,val)
+                       // 设定唯一字符串，改为小写
+                       if(typeof val === "string"){
+                           val=val.toLowerCase();
+                           if(target.indexOf(val)===-1){
+                               target.push(val);
+                           }
+                       }
+                       return true;
+                   }
+                };
+            // 代理在先  我们首先（主要、完全）与代理交互。通过与 messages_proxy 交互来增加某些特殊的规则
+            let messages_proxy=new Proxy(messages,AHandlers);
+            console.log("--- messages_proxy ---")
+            messages_proxy.push("heLLo...", 42, "wOrlD!!", "WoRld!!");
+            console.log(messages_proxy)
+            console.log(messages)
+            messages_proxy.forEach( function(val){
+                console.log(val);
+            } );
+            // hello world
+            messages.forEach( function(val){
+                console.log(val);
+            } );
+            // hello... world!!
+
+            /*
+             * 代理在后
+             * 让目标与代理交流，而不是代理与目标交流。这样，代码只能与主对象交互
+             * 这个回退方式的最简单实现就是把 proxy 对象放到主对象的
+             * [[Prototype]] 链中。
+             */
+
+     let LHandlers={
+             get(target,key,context) {
+                 return function () {
+                     context.speak(key + "!");
+                 }
+             }
+         },
+         catchall=new Proxy({},LHandlers),
+         greeter={
+             speak(who="sameone"){
+                 console.log("hello",who);
+             }
+         };
+     // 设定greeter回退到catchall
+    console.log("--- 代理在后 ---")
+    Object.setPrototypeOf(greeter,catchall);
+    greeter.speak(); // hello someone
+    greeter.speak( "world" ); // hello world
+    greeter.everyone(); // hello everyone!
+
+    /*
+    * 这里直接与 greeter 而不是 catchall 交流。当我们调用 speak(..) 的时候，它在 greeter
+    * 上被找到并直接使用。但是当我们试图访问像 everyone() 这样的方法的时候，这个函数在greeter 上并不存在。
+    * 默认的对象属性行为是检查，所以会查看 catchall 是否有 everyone 属性。
+    * 然后代理的 get() 处理函数介入并返回一个用访问的属性名（ "everyone" ）调用 speak(..) 的函数。
+    * 我把这个模式称为代理在后（proxy last），因为在这里代理只作为最后的保障。
+    */
+
+
+
+
+</script>
+</body>
+</html>

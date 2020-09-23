@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<script>
+    let th={
+        then:function thener(fulfilled) {
+            // 每100ms调用一次fulfilled
+            setInterval(fulfilled,1000);
+
+        }
+    }
+    function test() {
+        console.log("test");
+    }
+    // Promise.resolve(th.then(test));
+    let p1=new Promise(function (resolve) {
+
+    })
+    // 生成器+promise
+    let step1=function () {
+        return new Promise(function (resolve,reject) {
+
+        })
+    }
+    let step2=function () {
+
+    }
+    let step2Failed=function () {
+
+    }
+    let step3a=function(){
+
+    }
+    let step3b=function(){
+
+    }
+    let step3c=function(){
+
+    }
+    let step4=function () {
+
+    }
+    step1()
+        .then(
+            step2,
+            step2Failed
+        )
+        .then(
+            function(msg) {
+                return Promise.all( [
+                    step3a( msg ),
+                    step3b( msg ),
+                    step3c( msg )
+                ] )
+            }
+        )
+        .then(step4);
+    function *main() {
+        let ret=yield step1();
+        try{
+            ret = yield step2(ret);
+        }catch(err){
+            ret=yield step2Failed(err);
+        }
+        ret=yield Promise.all([
+            step3a(ret),
+            step3b(ret),
+            step3c(ret),
+        ])
+        yield step4(ret);
+    }
+
+
+    function run(gen) {
+        var args = [].slice.call( arguments, 1), it;
+        it = gen.apply( this, args );
+        return Promise.resolve()
+            .then( function handleNext(value){
+                var next = it.next( value );
+                return (function handleResult(next){
+                    if (next.done) {
+                        return next.value;
+                    }
+                    else {
+                        return Promise.resolve( next.value )
+                            .then(
+                                handleNext,
+                                function handleErr(err) {
+                                    return Promise.resolve(
+                                        it.throw( err )
+                                    )
+                                        .then( handleResult );
+                                }
+                            );
+                    }
+                })( next );
+            } );
+    }
+
+    run( main )
+        .then(
+            function fulfilled(){
+                // *main()成功完成
+                console.log("*main()成功完成");
+            },
+            function rejected(reason){
+                // 哎呀，出错了
+                console.log("哎呀，出错了");
+            }
+        );
+</script>
+</body>
+</html>

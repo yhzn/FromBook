@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<script>
+    let map=new Map();
+    let x={id:1},
+        y={id:2}
+
+        map.set(x,'foo');
+        map.set(y,'bar');
+
+        console.log(map)
+        console.log(map.get(x));
+        console.log(map.get(y));
+        // 删除
+        console.log(map.delete(y));
+        // 获取长度
+        console.log(map.size);
+        // 清空map
+        console.log(map.clear())
+    // or
+    let map1=new Map([
+        [x,"foo"],
+        [y,"bar"]
+    ])
+
+    console.log(map1.values())
+    console.log([...map1.values()])
+    console.log(Array.from(map1.values()))
+    console.log(Array.from(map1.keys()))
+    console.log(Array.from(map1.entries()))
+
+    // set 是一个值的集合，其中的值唯一（重复会被忽略）
+    console.log("---set---")
+    let set=new Set();
+        set.add(x);
+        set.add(y);
+        set.add(x);
+        console.log(set.size);
+
+
+    let keys = [ ...set.keys() ],
+        vals = [ ...set.values() ],
+        entries = [ ...set.entries() ];
+    console.log(keys,vals,entries)
+
+    set.delete(y);
+    set.clear();
+    set.size;
+
+    let set1=new Set([x,y]);
+
+    //set 不需要 get(..) 是因为不会从集合中取一个值，而是使用 has(..) 测试一个值是否存在
+    console.log(set1.has(x))
+
+
+
+</script>
+</body>
+</html>

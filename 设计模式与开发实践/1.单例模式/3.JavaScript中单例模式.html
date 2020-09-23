@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<script>
+    /*
+    前面提到的几种单例模式的实现，更多的是接近传统面向对象语言中的实现，单例对象从
+    “类”中创建而来。在以类为中心的语言中，这是很自然的做法。比如在 Java中，如果需要某个
+    对象，就必须先定义一个类，对象总是从类中创建而来的。
+
+
+    但 JavaScript 其实是一门无类（class-free）语言，也正因为如此，生搬单例模式的概念并无
+    意义。在 JavaScript 中创建对象的方法非常简单，既然我们只需要一个“唯一”的对象，为什
+    么要为它先创建一个“类”呢？这无异于穿棉衣洗澡，传统的单例模式实现在 JavaScript 中并
+    不适用。
+     */
+
+    // 单例模式的核心是确保只有一个实例，并提供全局访问
+
+    // 全局变量不是单例模式，但在 JavaScript开发中，我们经常会把全局变量当成单例来使用，例如：
+    var a = {};
+
+    /*
+    当用这种方式创建对象 a 时，对象 a 确实是独一无二的。如果 a 变量被声明在全局作用域下，
+    则我们可以在代码中的任何位置使用这个变量，全局变量提供给全局访问是理所当然的。这样就
+    满足了单例模式的两个条件。
+
+    但是全局变量存在很多问题，它很容易造成命名空间污染。在大中型项目中，如果不加以限
+    制和管理，程序中可能存在很多这样的变量。JavaScript 中的变量也很容易被不小心覆盖，就像上面的对象 var a = {}; 随时有可能被
+    别人覆盖。
+     */
+
+
+    // 作为开发者，我们有必要尽量减少全局变量的使用，即使需要，也要把它的污染降到
+    // 最低。以下几种方式可以相对降低全局变量带来的命名污染。
+
+    // 1.使用命名空间：
+    // 适当使用命名空间，并不会杜绝全局变量，但可以减少全局变量的数量
+    // 最简单的方式依然是使用字面量表达式
+    var namespace1={
+        a:function(){},
+        b:function(){}
+    }
+
+    // 动态创建命名空间
+    var MyApp={};
+    MyApp.namespaces=function(name){
+        var parts=name.split(".");
+        var current=MyApp;
+        for(var i in parts){
+            if(!current[parts[i]]){
+                current[parts[i]]={}; // 设置属性
+            }
+            current=current[parts[i]] // 将引用转到属性上
+        }
+    }
+    MyApp.namespaces("event")
+    MyApp.namespaces( 'dom.style' );
+    console.log(MyApp)
+
+
+
+    // 2.闭包封装私有变量：这种方法把一些变量封装在闭包的内部，只暴露一些接口跟外界通信
+    var user=(function(){
+        var _name="save",
+            _age=29;
+        return {
+            getUserInfo:function(){
+                return _name+"-"+_age;
+            }
+        }
+    })()
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<script>
+    // 访问或设置一个还不存在的属性时，默认情况下对象不是非常具有防御性
+    // 希望预先定义好一个对象的所有属性 / 方法之后，访问不存在的属性名时能够抛出一个错误。
+
+    // 代理在前设计方式
+    let obj={
+            a:1,
+            foo () {
+                console.log("a",this.a);
+            }
+        },
+        handlers={
+            get(target,key,context){
+                if(Reflect.has(target,key)){
+                    return Reflect.get(target,key,context);
+                }else{
+                    throw "No such property/method!"
+                }
+            },
+            set(target,key,val,context){
+                if(Reflect.has(target,key)){
+                    return Reflect.set(target,key,val,context);
+                }else{
+                    throw "No such property/method!";
+                }
+            }
+        },
+        pobj=new Proxy(obj,handlers);
+        pobj.a=3;
+        pobj.foo();
+        // pobj.b=5;
+
+    // 代理在后设计方式
+    let LHandlers={
+        get () {
+            throw "No such property/method!";
+        },
+        set () {
+            throw "No such property/method!";
+        }
+    },
+        LPobj=new Proxy({},LHandlers),
+        LObj={
+            a:1,
+            foo () {
+                console.log("a:",this.a);
+            }
+        };
+    // 设定 obj 回退到 pobj
+    Object.setPrototypeOf(LObj,LPobj);
+    LObj.a=3;
+    obj.foo();
+
+    LObj.b=5;
+    LObj.foo();
+
+    /*
+    * 考虑到处理函数的定义方式，这里的代理在后设计更简单一些。与截获 [[Get]] 和 [[Set]]
+    * 操作并且只在目标属性存在情况下才转发不同，我们依赖于这样一个事实：如果 [[Get]] 或
+    * [[Set]] 进入我们的 pobj 回退，此时这个动作已经遍历了整个 [[Prototype]] 链并且没有发
+    * 现匹配的属性。这时候我们可以自由抛出错误。
+    */
+</script>
+</body>
+</html>

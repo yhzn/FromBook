@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<script>
+    /*
+    * [[Prototype]] 机制运作的主要通道是 [[Get]] 运算。当直接对象中没有找到一个属性的时
+    * 候， [[Get]] 会自动把这个运算转给 [[Prototype]] 对象处理。
+    *
+    *
+    * 这意味着你可以使用代理的 get(..) trap 来模拟或扩展这个 [[Prototype]] 机制的概念。
+    * 我们将考虑的第一个 hack 就是创建两个对象，通过 [[Prototype]] 连成环状（或者，至少
+    * 看起来是这样！）。实际上并不能创建一个真正的 [[Prototype]] 环，因为引擎会抛出错
+    * 误。但是可以用代理模拟！
+    *
+    */
+
+    let handlers1={
+            get(target,key,context){
+                if(Reflect.has(target,key)){
+                    return Reflect.get(target,key,context);
+                }else{
+                    // 伪环状[[Prototype]]
+                    return Reflect.get(
+                        target[
+                                Symbol.for( "[[Prototype]]" )
+                            ],
+                        key,
+                        context
+                    )
+                }
+            }
+        },
+        obj1=new Proxy({
+            name:"obj-1",
+            foo(){
+                console.log("foo",this.name);
+            }
+        },handlers1),
+        obj2=Object.assign(
+            Object.create(obj1),
+            {
+                name:"obj-2",
+                bar () {
+                    console.log("bar",this.name);
+                    this.foo();
+                }
+            }
+        )
+
+    // 伪环状[[Prototype]]链接
+    obj1[ Symbol.for( "[[Prototype]]" ) ] = obj2;
+    obj1.bar();
+    // bar: obj-1 <-- 通过代理伪装[[Prototype]]
+    // foo: obj-1 <-- this上下文依然保留着
+    obj2.foo();
+    // foo: obj-2 <-- 通过[[Prototype]]
+
+
+
+
+    /**
+    * 既然已经了解了如何通过 get(..) 来模拟一个 [[Prototype]] 链接，现在让我们来深入
+    * hack 一下。不用环状 [[Prototype]] ，用多个 [[Prototype]] 链接（也就是“多继承”）怎
+    * 么样？实际上这非常简单直接：
+    **/
+
+    let obj3={
+            name:"obj-3",
+            foo () {
+                console.log("obj3.foo:",this.name);
+            }
+        },
+        obj5={
+            name:"obj-5",
+            foo(){
+                console.log("obj5.foo",this.name);
+            },
+            bar(){
+                console.log("obj5.bar",this.name);
+            }
+
+        },
+        handlers2={
+            // get(target,key,context){
+            //     if(Reflect.has(target,key)){
+            //         return Reflect.get(target,key,context);
+            //     }else{
+            //         // 伪装多个[[Prototype]]
+            //         for(let P of target[Symbol])
+            //     }
+            //
+            // }
+
+        }
+
+</script>
+</body>
+</html>

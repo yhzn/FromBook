@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<script>
+    /*
+    本质上说，这个思路就是你可以建立一个侦听者（listener）来观察对象的改变，然后在每次变化发生时调用一个回调。
+    例如，你可以据此更新 DOM。
+
+    你可以观察的改变有 6 种类型：
+    • add
+    • update
+    • delete
+    • reconfigure
+    • setPrototype
+    • preventExtensions
+     */
+
+    let obj = { a: 1, b: 2 };
+    Object.observe(
+        obj,
+        function(changes){
+            for (var change of changes) {
+                console.log(changes)
+                console.log( change );
+            }
+        },
+        [ "add", "update", "delete" ]
+    );
+    obj.c=3;
+</script>
+</body>
+</html>

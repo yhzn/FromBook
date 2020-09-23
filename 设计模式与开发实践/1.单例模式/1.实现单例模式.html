@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<script>
+    // 1.单例模式：保证一个类仅有一个实例，并提供一个访问它的全局访问点
+
+    /*
+    单例模式是一种常用的模式，有一些对象我们往往只需要一个，比如线程池、全局缓存、浏
+    览器中的 window 对象等
+
+    试想一下，当我们单击登录按钮的时候，页面中会出现一个登录浮窗，而这个登录浮窗是唯一的，无论单击多少
+次登录按钮，这个浮窗都只会被创建一次，那么这个登录浮窗就适合用单例模式来创建。
+
+    实现一个标准的单例模式并不复杂，无非是用一个变量来标志当前是否已经为某个类创建
+    过对象，如果是，则在下一次获取该类的实例时，直接返回之前创建的对象
+     */
+
+    var Singleton1=function(name){
+        this.name=name;
+        this.instance=null;
+    }
+    Singleton1.prototype.getName=function(){
+        console.log(this.name);
+    }
+    Singleton1.getInstance=function(name){
+        if(!this.instance){
+            this.instance=new Singleton1(name)
+        }
+        return this.instance;
+    }
+
+    var a1 = Singleton1.getInstance( 'sven1' );
+    var b1 = Singleton1.getInstance( 'sven2' );
+    console.log ( a1 === b1); // true
+
+
+    // or
+    var Singleton2=function (name) {
+        this.name=name;
+
+    }
+    Singleton2.prototype.getName=function(){
+        console.log(this.name)
+    }
+    Singleton2.getInstance=(function(){
+        var instance=null;
+        return function(name){
+            if(!instance){
+                instance=new Singleton2(name);
+            }
+            return instance;
+        }
+    })()
+
+    /*
+    我们通过 Singleton.getInstance 来获取 Singleton 类的唯一对象，这种方式相对简单，但有
+    一个问题，就是增加了这个类的“不透明性”， Singleton 类的使用者必须知道这是一个单例类，
+    跟以往通过 new XXX 的方式来获取对象不同，这里偏要使用 Singleton.getInstance 来获取对象。
+     */
+
+
+
+
+</script>
+</body>
+</html>

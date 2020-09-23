@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<script>
+    // 静态函数 Object.is(...) 执行比 === 比较更严格的值得比较
+    // Object.is(...) 调用底层 SameValue 算法
+
+    var x = NaN, y = 0, z = -0;
+    x === x; // false
+    y === z; // true
+    Object.is( x, x ); // true
+    Object.is( y, z ); // false
+
+    // 如果需要严格识别 NaN 或者 -0 值，那么应该选择 Object.is(..)
+
+    /* ES6 还新增了一个 Number.isNaN(..) 工具（本章后面会介绍），这个工具可
+    能是更方便的检查工具；与 Object.is(x,NaN) 相比，你可能更喜欢 Number.
+    isNaN(x) 。你可以使用 x == 0 && 1 / x === -Infinity 这种笨拙的方式精确
+    判断 -0 值，但这种情况下使用 Object.is(x,-0) 会好很多。
+    */
+</script>
+</body>
+</html>

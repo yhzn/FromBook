@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<script>
+    let Fib={
+        [Symbol.iterator](){
+            var n1=1,n2=1;
+            return {
+                // 使迭代器成为 iterator
+                [Symbol.iterator](){
+                    return this;
+                },
+                next () {
+                    var current=n2;
+                    n2=n1;
+                    n1=n1+current;
+                    return {
+                        value:current,
+                        done:false
+                    }
+                },
+                return (v) {
+                    console.log('Fibonacci sequence abandoned.');
+                    return {
+                        value:v,
+                        done:true
+                    }
+                }
+            }
+        }
+    }
+    for(var v of Fib){
+        console.log(v)
+        if(v>50){
+            break;
+        }
+    }
+
+    let tasks={
+        [Symbol.iterator](){
+            let steps=this.actions.slice();
+            return {
+                // 使迭代器成为 iterable
+                [Symbol.iterator](){
+                    return this;
+                },
+                next(...args){
+                    if(steps.length>0){
+                        let res=steps.shift()(...args);
+                        return {
+                            value:res,
+                            done:false
+                        }
+                    }else{
+                        return {
+                            done:true
+                        }
+                    }
+                },
+                return (v) {
+                    console.log("return:"+v);
+                    steps.length=0;
+                    return {
+                        value:v,
+                        done:true
+                    }
+                }
+            }
+        },
+        actions:[]
+    }
+    tasks.actions.push(
+        function step1(x){
+            console.log("step 1:",x);
+            return x*2;
+        },
+        function step2(x,y){
+            console.log("step 2:",x,y);
+            return x+(y*2);
+        },
+        function step3(x,y,z){
+            console.log("step 3:",x,y,z);
+            return (x*y)+z;
+        },
+    )
+    let it=tasks[Symbol.iterator]();
+    it.next(10);
+    it.next(20,50);
+    it.next(20,50,120);
+    console.log(it.next());
+    console.log(it.next());
+
+    if (!Number.prototype[Symbol.iterator]) {
+        Object.defineProperty(
+            Number.prototype,
+            Symbol.iterator,
+            {
+                writable: true,
+                configurable: true,
+                enumerable: false,
+                value: function iterator(){
+                    var i, inc, done = false, top = +this;
+                    // 正向还是反向迭代？
+                    inc = 1 * (top < 0 ? -1 : 1);
+                    return {
+                        // 使得迭代器本身成为iterable!
+                        [Symbol.iterator](){ return this; },
+                        next() {
+                            if (!done) {
+                            // 初始迭代总是
+                                if (i == null){
+                                    i = 0;
+                                }else if (top >= 0) {
+                                    // 正向迭代
+                                    i = Math.min(top,i + inc);
+                                }else {
+                                    // 反向迭代
+                                    i = Math.max(top,i + inc);
+                                }
+                                // 本次迭代后结束？
+                                if (i == top) {
+                                    done = true;
+                                }
+                                return { value: i, done: false };
+                            }else {
+                                return { done: true };
+                            }
+                        }
+                    };
+                }
+            }
+        );
+    }
+    for (var i of 3) {
+        console.log( i );
+    }
+</script>
+</body>
+</html>

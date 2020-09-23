@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<button id="loginBtn">创建</button>
+<script>
+    // 惰性单例指的是在需要的时候才创建对象实例。惰性单例是单例模式的重点，
+    // 这种技术在实际开发中非常有用，有用的程度可能超出了我们的想象
+
+    // 如前面 instance 实例对象总是在我们调用 Singleton.getInstance 的时候才被创建
+    var Singleton=function(){};
+    Singleton.getInstance = (function(){
+        var instance = null;
+        return function( name ){
+            if ( !instance ){
+                instance = new Singleton( name );
+            }
+            return instance;
+        }
+    })();
+
+    var createLoginLayer = (function(){
+        var div;
+        return function(){
+            if ( !div ){
+                div = document.createElement( 'div' );
+                div.innerHTML = '我是登录浮窗';
+                div.style.display = 'none';
+                document.body.appendChild( div );
+            }
+            return div;
+        }
+    })();
+
+    document.getElementById( 'loginBtn' ).onclick = function(){
+        var loginLayer = createLoginLayer();
+        loginLayer.style.display = 'block';
+    };
+
+    /*
+    上一节我们完成了一个可用的惰性单例，但是我们发现它还有如下一些问题。
+    这段代码仍然是违反单一职责原则的，创建对象和管理单例的逻辑都放在 createLoginLayer
+    对象内部。
+    如果我们下次需要创建页面中唯一的 iframe ，或者 script 标签，用来跨域请求数据，就
+    必须得如法炮制，把 createLoginLayer 函数几乎照抄一遍：
+     */
+
+    var createIframe= (function(){
+        var iframe;
+        return function(){
+            if ( !iframe){
+                iframe= document.createElement( 'iframe' );
+                iframe.style.display = 'none';
+                document.body.appendChild( iframe);
+            }
+            return iframe;
+        }
+    })();
+
+    // 通用的惰性单例
+
+    /*
+    我们需要把不变的部分隔离出来，先不考虑创建一个 div 和创建一个 iframe 有多少差异，管
+    理单例的逻辑其实是完全可以抽象出来的，这个逻辑始终是一样的：用一个变量来标志是否创建
+    过对象，如果是，则在下次直接返回这个已经创建好的对象：
+     */
+
+    var getSingle=function(fn){
+        var result;
+        return function(){
+            return result||(result=fn.apply(this,arguments));
+        }
+    }
+
+    // result 变量因为身在闭包中，它永远不会被销毁。在将来的请求中，如果 result 已经被赋值，那么它将返回这个值。
+
+    var createLoginLayer1 = function(){
+        var div = document.createElement( 'div' );
+        div.innerHTML = '我是登录浮窗';
+        div.style.display = 'none';
+        document.body.appendChild( div );
+        return div;
+    };
+    var createSingleLoginLayer = getSingle( createLoginLayer1 );
+    document.getElementById( 'loginBtn' ).onclick = function(){
+        var loginLayer = createSingleLoginLayer();
+        loginLayer.style.display = 'block';
+    };
+    var createSingleIframe = getSingle( function(){
+        var iframe = document.createElement ( 'iframe' );
+        document.body.appendChild( iframe );
+        return iframe;
+    });
+    document.getElementById( 'loginBtn' ).onclick = function(){
+        var loginLayer = createSingleIframe();
+        loginLayer.src = 'http://baidu.com';
+    };
+
+    /*
+    这种单例模式的用途远不止创建对象，比如我们通常渲染完页面中的一个列表之后，接下来
+    要给这个列表绑定 click 事件，如果是通过 ajax 动态往列表里追加数据，在使用事件代理的前提
+    下， click 事件实际上只需要在第一次渲染列表的时候被绑定一次，但是我们不想去判断当前是
+    否是第一次渲染列表，如果借助于 jQuery，我们通常选择给节点绑定 one 事件：
+     */
+
+    var bindEvent = function(){
+        $( 'div' ).one( 'click', function(){
+            alert ( 'click' );
+        });
+    };
+    var render = function(){
+        console.log( '开始渲染列表' );
+        bindEvent();
+    };
+    render();
+    render();
+    render();
+
+    // 如果利用 getSingle 函数，也能达到一样的效果。代码如下：
+    var bindEvent1 = getSingle(function(){
+        document.getElementById( 'div1' ).onclick = function(){
+            alert ( 'click' );
+        }
+        return true;
+    });
+    var render1 = function(){
+        console.log( '开始渲染列表' );
+        bindEvent1();
+    };
+    render1();
+    render1();
+    render1();
+
+    // 可以看到， render 函数和 bindEvent 函数都分别执行了 3 次，但 div 实际上只被绑定了一个事件。
+</script>
+</body>
+</html>
