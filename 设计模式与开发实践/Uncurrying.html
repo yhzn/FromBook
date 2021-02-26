@@ -80,8 +80,10 @@
     // 实现方式一：
     Function.prototype.uncurrying=function(){
         var self=this;
+        console.log(self);
         return function(){
             var obj=Array.prototype.shift.call(arguments);
+            console.log(obj);
             return self.apply(obj,arguments);
         }
     }
@@ -96,7 +98,7 @@
     var push=Array.prototype.push.uncurrying();
     (function(){
         push(arguments,"c");
-        console.log(arguments)
+        console.log(arguments);
     })(1,2,3)
 
 

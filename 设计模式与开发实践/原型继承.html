@@ -39,8 +39,8 @@
         return typeof ret === 'object' ? ret : obj; // 确保构造器总是会返回一个对象
     }
 
-    let a=objectFactory(Person,'sven')
-    let a1=new Person("ten")
+    let a=objectFactory(Person,'sven');
+    let a1=new Person("ten");
     console.log(a.name);
     console.log(a.getName());
     console.log(a1.name);
